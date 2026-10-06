@@ -1,0 +1,3038 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aurora Memoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Atkinson+Hyperlegible+Next:wght@400;700&display=swap">
+<style>
+/* Layout: pantalla única de stand — barra con marca y navegación entre 3 juegos + ranking + staff; una vista a la vez. Tema nocturno de marca por defecto, tema claro elegible desde Staff. */
+:root{
+  --bg:#0B1026; --surface:#171E42; --raised:#232B52; --line:#2F3866;
+  --text:#F5F7FC; --muted:#B8C0D9; --dim:#848DB0; --input-line:#848DB0;
+  --accent:#A884FF; --btn:#7C5CEE; --btn-hover:#6E4FE0;
+  --hi:#E5F06F; --lime:#E5F06F; --on-lime:#0B1026;
+  --badge-bg:#A884FF; --badge-fg:#0B1026;
+  --ok:#E5F06F; --half:#A884FF; --danger:#F29B9B; --danger-line:#5a2d3a;
+  --card-face:#171E42; --p1:#A884FF; --p2:#E5F06F;
+  --aurora:linear-gradient(90deg,#A884FF,#F5A6D3,#FFD6A8,#BDEFD4,#BFD7FF);
+  --score-grad:linear-gradient(90deg,#A884FF,#F5A6D3,#FFD6A8,#BDEFD4,#BFD7FF);
+  --f-brand:"Figtree","Inter",system-ui,sans-serif;
+  --f-ui:"Inter",system-ui,sans-serif;
+  --f-board:"Atkinson Hyperlegible Next","Atkinson Hyperlegible","Inter",system-ui,sans-serif;
+  color-scheme:dark;
+}
+:root[data-aurora="light"]{
+  --bg:#F5F7FC; --surface:#FFFFFF; --raised:#E9EDF7; --line:#D2D9EA;
+  --text:#171E42; --muted:#4D5679; --dim:#697298; --input-line:#848DB0;
+  --accent:#6E4FE0; --btn:#6E4FE0; --btn-hover:#5638BE;
+  --hi:#5638BE; --lime:#E5F06F; --on-lime:#0B1026;
+  --badge-bg:#6E4FE0; --badge-fg:#FFFFFF;
+  --ok:#1F8A57; --half:#6E4FE0; --danger:#A62828; --danger-line:#F29B9B;
+  --card-face:#171E42; --p1:#6E4FE0; --p2:#5F6C14;
+  --score-grad:linear-gradient(135deg,#9773FD,#6E4FE0);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:400 16px/1.5 var(--f-ui);transition:background .3s,color .3s}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:clamp(16px,3vw,40px);padding-block:0 40px;min-height:100%;display:flex;flex-direction:column}
+.band{height:6px;background:var(--aurora)}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:20px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wordmark{font:800 22px/1 var(--f-brand);letter-spacing:.12em}
+.tag{font:500 15px/1.2 var(--f-brand);color:var(--muted)}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button,.btn{font:600 15px/1 var(--f-ui);border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);padding:12px 18px;cursor:pointer}
+nav button[aria-current="page"]{background:var(--raised);border-color:var(--accent)}
+nav button:hover,.btn:hover{border-color:var(--accent)}
+nav .ghost{color:var(--muted)}
+.btn.primary{background:var(--btn);border-color:var(--btn);color:#fff}
+.btn.primary:hover{background:var(--btn-hover)}
+.btn.lime{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+.btn.big{font-size:20px;padding:18px 30px}
+.btn[aria-pressed="true"]{background:var(--raised);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #9773FD;outline-offset:2px}
+main{flex:1;display:flex;flex-direction:column}
+.view{display:flex;flex-direction:column;gap:28px;flex:1}
+h1,h2{font-family:var(--f-brand);text-wrap:balance;margin:0}
+h1{font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1.15}
+h2{font-weight:600;font-size:24px;line-height:1.2}
+p{margin:0}
+.lead{color:var(--muted);font-size:clamp(17px,1.8vw,22px);max-width:60ch}
+.lead strong{color:var(--text)}
+.eyebrow{font:600 13px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-top:8px}
+.head>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.clock{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}
+.clock .t{font:700 clamp(44px,7vw,84px)/1 var(--f-board);font-variant-numeric:tabular-nums;color:var(--hi)}
+.clock .l{color:var(--muted);font-size:16px}
+
+/* Palabras */
+.board{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:16px}
+.board li{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px 22px;display:flex;flex-direction:column;gap:12px;height:clamp(150px,20vh,210px);overflow:hidden;min-width:0}
+.n{flex:none;font:700 18px/1 var(--f-board);color:var(--badge-fg);background:var(--badge-bg);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.board .w{flex:1;min-height:0;width:100%;display:flex;align-items:center;font-weight:700;font-family:var(--f-board);line-height:1.1;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:none;transition:filter .5s,opacity .5s}
+.board.hidden .w{filter:blur(14px);opacity:.35;user-select:none}
+.board.hidden li::after{content:"?";position:absolute;right:22px;bottom:12px;font:700 60px/1 var(--f-board);color:var(--raised)}
+.callout{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 26px 22px 32px;position:relative;overflow:hidden}
+.callout::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:var(--aurora)}
+.callout p{font-size:18px;max-width:70ch}
+.callout.go{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+.callout.go::before{display:none}
+.callout.go h2{font-size:clamp(26px,3vw,36px)}
+
+/* Formularios */
+form{display:flex;flex-direction:column;gap:22px;max-width:880px}
+label{font:600 15px/1.2 var(--f-ui);color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+input[type=text],input[type=time],input[type=number],select{font:500 20px/1.2 var(--f-board);color:var(--text);background:var(--surface);border:1px solid var(--input-line);border-radius:12px;padding:14px 16px;width:100%;min-width:0}
+input::placeholder{color:var(--dim)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.slot{display:flex;align-items:center;gap:10px;min-width:0}
+.slot .n{width:34px;height:34px;font-size:16px;background:var(--raised);color:var(--muted)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{color:var(--dim);font-size:15px}
+.closed{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:32px;display:flex;flex-direction:column;gap:14px;max-width:720px}
+.entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 16px;align-items:end;max-width:760px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+.entry label{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--text)}
+.entry input[type=text]{height:60px}
+.entry .btn.big{height:60px;padding-block:0;white-space:nowrap}
+.entry.duo{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);max-width:960px}
+.entry.duo .btn{grid-column:1/-1;justify-self:start}
+.pdot{width:12px;height:12px;border-radius:50%;flex:none}.pdot.d1{background:var(--p1)}.pdot.d2{background:var(--p2)}
+.lbl{font:600 15px/1.2 var(--f-ui);color:var(--muted)}
+.timing{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:18px}
+.timing .grid2{align-items:end}
+.timing h3{margin:0;font:600 17px/1.2 var(--f-brand)}
+.total{font:700 30px/1.2 var(--f-board);color:var(--hi);font-variant-numeric:tabular-nums;padding-block:10px}
+.tl{position:relative;display:flex;height:34px;border-radius:10px;overflow:hidden;font:600 13px/34px var(--f-ui)}
+.tl .seg{min-width:0;padding-inline:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl .a{background:var(--lime);color:var(--on-lime)}.tl .b{background:var(--raised);color:var(--text)}
+.tl .mark{position:absolute;top:0;bottom:0;width:3px;margin-left:-1px;background:var(--btn);box-shadow:0 0 0 2px var(--surface)}
+
+/* Resultado */
+.score{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.score .big{font:800 clamp(64px,10vw,120px)/1 var(--f-brand);font-variant-numeric:tabular-nums;background:var(--score-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.score .of{font:600 28px/1 var(--f-brand);color:var(--muted)}
+.cmp{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+.cmp li{border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);background:var(--surface);min-width:0}
+.cmp .row{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--f-ui);letter-spacing:.04em;text-transform:uppercase}
+.cmp .ans{font-weight:700;font-family:var(--f-board);line-height:1.2;white-space:nowrap;overflow:hidden}
+.cmp .real{color:var(--muted);font-size:15px;overflow-wrap:anywhere}
+.cmp li.ok{border-color:var(--ok)} .cmp li.ok .row{color:var(--ok)}
+.cmp li.half{border-color:var(--half)} .cmp li.half .row{color:var(--half)}
+.cmp li.miss .row,.cmp li.miss .ans{color:var(--dim)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:15px}
+.aurora-msg{color:var(--muted);font-size:17px;max-width:62ch;border-top:1px solid var(--line);padding-top:18px}
+.aurora-msg strong{color:var(--text)}
+
+/* Parejas */
+.memo{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:clamp(8px,1.4vw,16px);width:100%;max-width:calc(var(--cols) * 150px);margin-inline:auto}
+@media (max-width:520px){.memo{--cols:4 !important}}
+.card{aspect-ratio:1;max-width:100%;perspective:800px;border:0;padding:0;background:none;cursor:pointer;border-radius:16px}
+.card .in{position:relative;display:block;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.card.up .in{transform:rotateY(180deg)}
+.card .face,.card .back{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center}
+.card .back{background:var(--aurora);box-shadow:inset 0 0 0 1px rgba(11,16,38,.15)}
+.card .back::after{content:"";width:28%;aspect-ratio:1;border-radius:50%;border:3px solid rgba(11,16,38,.25)}
+.card .face{background:var(--card-face);transform:rotateY(180deg)}
+.card .face svg{width:66%;height:66%}
+.card.done .face{box-shadow:inset 0 0 0 3px var(--lime)}
+.card.done{cursor:default}
+.stats{display:flex;gap:28px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat b{font:700 34px/1 var(--f-board);font-variant-numeric:tabular-nums;color:var(--hi)}
+.stat span{color:var(--muted);font-size:14px}
+
+/* Secuencia */
+.simonwrap{display:flex;flex-direction:column;align-items:center;gap:20px}
+.simon{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,2vw,18px);width:min(100%,520px,62vh);aspect-ratio:1}
+.pad{border:0;border-radius:28px;cursor:pointer;opacity:.4;transition:opacity .12s,transform .12s,box-shadow .12s;box-shadow:inset 0 0 0 2px rgba(11,16,38,.15)}
+.pad:nth-child(1){background:#A884FF;border-top-left-radius:50%}
+.pad:nth-child(2){background:#E5F06F;border-top-right-radius:50%}
+.pad:nth-child(3){background:#F5A6D3;border-bottom-left-radius:50%}
+.pad:nth-child(4){background:#8EB8FF;border-bottom-right-radius:50%}
+.pad.lit{opacity:1;transform:scale(1.03);box-shadow:0 0 40px 6px currentColor}
+.pad:nth-child(1).lit{color:#A884FF}.pad:nth-child(2).lit{color:#E5F06F}.pad:nth-child(3).lit{color:#F5A6D3}.pad:nth-child(4).lit{color:#8EB8FF}
+.simon.lock .pad{cursor:default}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34%;aspect-ratio:1;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;box-shadow:0 0 0 8px var(--bg)}
+.hub b{font:700 clamp(34px,6vw,56px)/1 var(--f-board);font-variant-numeric:tabular-nums}
+.hub span{font-size:13px;color:var(--muted)}
+.sstatus{font:600 clamp(20px,2.4vw,28px)/1.2 var(--f-brand);text-align:center;min-height:1.2em}
+
+/* Duelo */
+.vs{font:800 22px/60px var(--f-brand);color:var(--muted);text-align:center}
+.p1in{border-color:var(--p1)!important;border-width:2px!important}.p2in{border-color:var(--p2)!important;border-width:2px!important}
+.duelbar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pl{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;align-items:center;gap:2px 12px;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:16px 20px;min-width:0;transition:border-color .2s,background .2s}
+.pl .pn{font:700 clamp(20px,2.4vw,30px)/1.15 var(--f-board);overflow-wrap:anywhere;min-width:0}
+.pl b{grid-row:span 2;font:800 clamp(40px,6vw,64px)/1 var(--f-brand);font-variant-numeric:tabular-nums}
+.pl .turn{font:600 13px/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;visibility:hidden}
+.pl.p1 b{color:var(--p1)} .pl.p2 b{color:var(--p2)}
+.pl.p1.on{border-color:var(--p1);background:var(--raised)} .pl.p2.on{border-color:var(--p2);background:var(--raised)}
+.pl.on .turn{visibility:visible} .pl.p1 .turn{color:var(--p1)} .pl.p2 .turn{color:var(--p2)}
+.card.o0 .face{box-shadow:inset 0 0 0 4px #A884FF}.card.o1 .face{box-shadow:inset 0 0 0 4px #E5F06F}
+.rank li.match{grid-template-columns:1fr auto 1fr}
+.rank li.match:first-child{background:var(--surface);border-color:var(--line)}
+.rank .r{text-align:right}
+/* QR */
+.head>div:first-child{flex:1 1 380px}
+.head>.side{flex:none;display:flex;flex-direction:row;gap:24px;align-items:center;flex-wrap:nowrap}
+@media (max-width:700px){.head>.side{flex-wrap:wrap}}
+.qr{background:#FFFFFF;border-radius:16px;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;width:164px;box-shadow:0 0 0 1px var(--line)}
+.qrimg{width:144px;height:144px}.qrimg svg{width:100%;height:100%;display:block}
+.qr p{margin:0;color:#0B1026;font:600 13px/1.25 var(--f-ui);text-align:center}
+.qrprev{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.qrprev .field{flex:1 1 260px}
+.link{color:var(--accent);overflow-wrap:anywhere;font-size:14px}
+/* Timer celular */
+body.timer nav{display:none}
+.tview{display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;padding-block:4vh;max-width:560px;margin-inline:auto;width:100%}
+.tbig{font:700 clamp(72px,24vw,150px)/1 var(--f-board);font-variant-numeric:tabular-nums;color:var(--hi)}
+.tbar{width:100%;height:12px;border-radius:999px;background:var(--raised);overflow:hidden}.tbar span{display:block;height:100%;background:var(--aurora);width:0}
+.tactions{display:flex;flex-direction:column;gap:12px;width:100%}.tactions .btn{width:100%}
+body.timer.last .tbig{color:var(--lime)}
+body.timer.alert{--bg:#E5F06F;--text:#0B1026;--muted:#232B52;--hi:#0B1026;--dim:#232B52;--accent:#3F2792;--raised:#D3E24D}
+body.timer.alert .tbig{color:#0B1026}
+body.timer.alert .btn.lime{background:#0B1026;border-color:#0B1026;color:#E5F06F}
+body.timer.alert .tbig{animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.06)}}
+/* Ranking */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-width:820px}
+.rank li{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.rank .pos{font:700 22px/1 var(--f-board);color:var(--muted);font-variant-numeric:tabular-nums}
+.rank li:first-child{background:var(--raised);border-color:var(--hi)}
+.rank li:first-child .pos{color:var(--hi)}
+.rank .name{font:700 22px/1.2 var(--f-board);min-width:0;overflow-wrap:anywhere}
+.rank .pts{font:700 22px/1 var(--f-board);font-variant-numeric:tabular-nums;text-align:right}
+.rank .pts small{font:500 14px var(--f-ui);color:var(--dim)}
+.empty{color:var(--dim);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:820px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:32px}
+.cols>section{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* Staff */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:18px;max-width:880px}
+.panel h2{font-size:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px}
+.status{display:inline-flex;align-items:center;gap:8px;font:600 14px/1 var(--f-ui);padding:8px 12px;border-radius:999px;background:var(--raised)}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.status.off .dot{background:var(--accent)}
+.check{display:flex;align-items:center;gap:10px;font:500 16px var(--f-ui);color:var(--text)}
+.check input{width:22px;height:22px;accent-color:var(--btn)}
+.danger{color:var(--danger);border-color:var(--danger-line)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--lime);color:var(--on-lime);font:600 16px var(--f-ui);padding:12px 20px;border-radius:999px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:700px){
+  header{padding-block:14px}
+  nav{width:100%}
+  nav button{padding:10px 12px;font-size:14px}
+  .head{align-items:flex-start}
+  .clock{align-items:flex-start;text-align:left}
+  .btn.big{font-size:18px;padding:16px 22px}
+  .callout{padding:18px 18px 18px 24px}
+  .panel,.closed{padding:18px}
+  .board{grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px}
+  .board li{height:120px;padding:14px 16px;gap:8px}
+  .board .n{width:30px;height:30px;font-size:15px}
+  .entry,.entry.duo{grid-template-columns:minmax(0,1fr);padding:18px}
+  .entry .btn.big{justify-self:stretch}
+  .vs{line-height:1}
+  .duelbar{gap:8px}
+  .pl{padding:12px 14px}
+  .stats{gap:18px}
+  .rank li{grid-template-columns:32px 1fr auto;padding:12px 14px;gap:10px}
+  .rank .name,.rank .pts{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="band"></div>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="wordmark">AURORA</span><span class="tag">Juegos de memoria</span></div>
+    <nav aria-label="Secciones">
+      <button data-go="board">Palabras</button>
+      <button data-go="pairs">Parejas</button>
+      <button data-go="simon">Secuencia</button>
+      <button data-go="duel">Duelo</button>
+      <button data-go="rank">Ranking</button>
+      <button data-go="staff" class="ghost">Staff</button>
+    </nav>
+  </header>
+  <main id="app"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* qrcode-generator 1.4.4 — (c) 2009 Kazuhiko Arase, MIT license */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+const IS_TIMER=location.hash.startsWith("#timer");
+const BANK=["llaves","mate","paraguas","anteojos","guitarra","bicicleta","tortuga","limón","reloj","cuaderno","ventana","alfajor","sombrero","girasol","tetera","almohada","brújula","escalera","farol","mochila","pelota","faro","cebolla","violín","colectivo","empanada","pingüino","tijera","vela","cartas","acordeón","ballena","cometa","dulce de leche","termo","bufanda","mandarina","trompeta","hamaca","caracol","linterna","fósforo","radio","sandía","zapatilla","jirafa","tren","molino","nube","barrilete","pulpo","peine","cactus","globo","ancla","sobre","carpincho","medialuna","teléfono","durazno"];
+const SHAPES=[
+ ["Círculo","#A884FF",'<circle cx="50" cy="50" r="34"/>'],
+ ["Corazón","#F5A6D3",'<path d="M50 86C20 64 8 46 14 30C20 14 42 12 50 28C58 12 80 14 86 30C92 46 80 64 50 86Z"/>'],
+ ["Estrella","#FFD27A",'<polygon points="50,8 61,38 93,38 67,57 77,89 50,70 23,89 33,57 7,38 39,38"/>'],
+ ["Gota","#8EB8FF",'<path d="M50 8C64 32 78 48 78 64A28 28 0 0 1 22 64C22 48 36 32 50 8Z"/>'],
+ ["Luna","#E5F06F",'<path d="M62 10A40 40 0 1 0 90 66A32 32 0 1 1 62 10Z"/>'],
+ ["Triángulo","#7FD6A8",'<path d="M50 12L90 84H10Z"/>'],
+ ["Cuadrado","#FFD6A8",'<rect x="16" y="16" width="68" height="68" rx="10"/>'],
+ ["Rombo","#D9C5FF",'<path d="M50 6L92 50L50 94L8 50Z"/>'],
+ ["Hexágono","#BDEFD4",'<polygon points="50,8 87,29 87,71 50,92 13,71 13,29"/>'],
+ ["Cruz","#F29B9B",'<path d="M37 10H63V37H90V63H63V90H37V63H10V37H37Z"/>'],
+ ["Anillo","#BFD7FF",'<circle cx="50" cy="50" r="30" fill="none" stroke="#BFD7FF" stroke-width="14"/>'],
+ ["Rayo","#FFFFFF",'<path d="M60 6L20 56H46L38 94L80 40H54Z"/>']
+];
+const svg=i=>`<svg viewBox="0 0 100 100" aria-hidden="true" fill="${SHAPES[i][1]}">${SHAPES[i][2]}</svg>`;
+const KEY="aurora-memoria-v1", MAXW=30;
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function pick(n,exclude=[]){let pool=BANK.filter(w=>!exclude.includes(w));if(pool.length<n)pool=[...BANK];return shuffle(pool).slice(0,n)}
+const CFG={theme:"dark",pairsN:6,preview:5,speed:"normal",sound:true,roundMin:45,answerMin:15,zoom:1,publicUrl:"",duelN:8,duelPreview:3};
+const DEF=()=>({...CFG,round:1,words:null,challengeAt:0,entries:[],pairs:[],simon:[],duels:[]});
+function fresh(keep={}){const c={};for(const k in CFG)c[k]=k in keep?keep[k]:CFG[k];return{...DEF(),...c,words:pick(keep.words?.length||7),roundStart:Date.now(),challengeAt:Date.now()+c.roundMin*60000}}
+
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}
+if(window.claude?.hot?.data?.S) S=window.claude.hot.data.S;
+if(!S||!Array.isArray(S.words)) S=fresh(); else S={...DEF(),...S};
+if(!S.answerMin||S.answerMin<0.5)S.answerMin=15;
+if(!S.roundStart)S.roundStart=S.challengeAt-S.roundMin*60000;
+const N=()=>S.words.length;
+let view="board", lastResult=null, confirmReset=false, confirmClear=null, rankTab="words";
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+window.claude?.hot?.snapshot?.(()=>({S}));
+function applyTheme(){document.documentElement.setAttribute("data-aurora",S.theme)}
+applyTheme();
+function applyZoom(){const w=document.querySelector(".wrap");if(w)w.style.zoom=S.zoom}
+function setZoom(z){S.zoom=Math.round(Math.min(2.5,Math.max(.5,z))*10)/10;applyZoom();save();toast("Zoom "+Math.round(S.zoom*100)+"%");const b=$("#z0");if(b)b.textContent=Math.round(S.zoom*100)+"%";queueFit()}
+addEventListener("wheel",e=>{if(!e.ctrlKey)return;e.preventDefault();setZoom(S.zoom+(e.deltaY<0?.1:-.1))},{passive:false});
+addEventListener("keydown",e=>{if(!(e.ctrlKey||e.metaKey))return;if(e.key==="+"||e.key==="="){e.preventDefault();setZoom(S.zoom+.1)}else if(e.key==="-"){e.preventDefault();setZoom(S.zoom-.1)}else if(e.key==="0"){e.preventDefault();setZoom(1)}});
+
+const endAt=()=>S.challengeAt+S.answerMin*60000;
+function phase(){const t=Date.now();if(t<S.challengeAt)return"mem";if(t<endAt())return"ans";return"end"}
+const isChallenge=()=>phase()!=="mem";
+function fmtMin(m){m=Math.round(m*2)/2;const h=Math.floor(m/60),r=m-h*60;const rs=(r%1?r.toFixed(1).replace(".",","):r)+" min";return h?h+" h"+(r?" "+rs:""):rs}
+function progress(){const tot=endAt()-S.roundStart;return Math.max(0,Math.min(100,(Date.now()-S.roundStart)/tot*100)).toFixed(2)}
+function newRound(){S.round++;S.words=pick(N(),S.words);S.roundStart=Date.now();S.challengeAt=S.roundStart+S.roundMin*60000;save()}
+function mmss(ms){let s=Math.max(0,Math.round(ms/1000));const h=Math.floor(s/3600);s-=h*3600;const m=Math.floor(s/60);s-=m*60;const p=n=>String(n).padStart(2,"0");return(h?h+":":"")+p(m)+":"+p(s)}
+const hhmm=t=>new Date(t).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
+function left(){const ph=phase();if(ph==="ans")return mmss(endAt()-Date.now());let s=Math.max(0,Math.round((S.challengeAt-Date.now())/1000));const h=Math.floor(s/3600);s-=h*3600;const m=Math.floor(s/60);s-=m*60;const p=n=>String(n).padStart(2,"0");return(h?h+":":"")+p(m)+":"+p(s)}
+const norm=w=>(w||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zñ ]/g,"").replace(/\s+/g," ").trim();
+const same=(a,b)=>{a=norm(a);b=norm(b);return a&&(a===b||a+"s"===b||a===b+"s"||a+"es"===b||a===b+"es")};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function score(ans){
+  const used=new Set();let pos=0,rec=0;
+  const detail=ans.map((a,i)=>{if(same(a,S.words[i])){pos++;rec++;used.add(i);return"ok"}return null});
+  ans.forEach((a,i)=>{if(detail[i])return;const j=S.words.findIndex((w,k)=>!used.has(k)&&same(a,w));if(j>-1){rec++;used.add(j);detail[i]="half"}else detail[i]="miss"});
+  return{points:rec+pos,rec,pos,detail};
+}
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),2200)}
+
+/* Ajuste de texto al tamaño de su cuadro */
+function fit(){
+  app.querySelectorAll(".fit").forEach(el=>{
+    const max=+el.dataset.max||56,min=+el.dataset.min||14;let s=max;el.style.fontSize=s+"px";
+    while(s>min&&(el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1)){s-=s>30?2:1;el.style.fontSize=s+"px"}
+  });
+}
+let fitQ=0;const queueFit=()=>{cancelAnimationFrame(fitQ);fitQ=requestAnimationFrame(fit)};
+try{new ResizeObserver(queueFit).observe(app)}catch(e){addEventListener("resize",queueFit)}
+document.fonts?.ready?.then(queueFit);
+
+function go(v){stopGames();view=v;if(v!=="answer")lastResult=null;confirmReset=false;confirmClear=null;render();window.scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+function render(){
+  const navKey=view==="answer"?"board":view;
+  document.querySelectorAll("nav button").forEach(b=>{if(b.dataset.go===navKey)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  app.innerHTML=({board,answer,pairs:pairsView,simon:simonView,duel:duelView,rank,staff})[view]();
+  bind();queueFit();
+}
+
+/* ---------- QR para celulares ---------- */
+function autoBase(){try{if(location.protocol==="https:"&&window.top===window)return location.origin+location.pathname}catch(e){}return""}
+function baseUrl(){return(S.publicUrl||autoBase()).split("#")[0].trim()}
+function playerUrl(){const b=baseUrl();if(!/^https?:\/\//.test(b))return null;return b+"#timer&r="+S.round+"&s="+S.roundStart+"&m="+S.roundMin+"&a="+S.answerMin}
+function qrSvg(t){try{const q=qrcode(0,"M");q.addData(t);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){return""}}
+function qrBlock(){const u=playerUrl();if(!u)return"";return`<div class="qr"><div class="qrimg">${qrSvg(u)}</div><p>Escaneá y llevate<br>el timer de la ronda ${S.round}</p></div>`}
+
+/* ---------- Palabras ---------- */
+function board(){
+  const ph=phase(), ch=ph!=="mem", end=ph==="end";
+  const title=ph==="mem"?`Memorizá ${N()===1?"esta palabra":"estas "+N()+" palabras"} y su orden`:end?"Estas eran las palabras":"Las palabras se escondieron";
+  const lead=ph==="mem"?`Volvé a las <strong>${hhmm(S.challengeAt)}</strong> y decinos cuáles eran y en qué orden estaban. Gana quien recuerde más.`:end?"La ronda terminó. Enseguida empieza la próxima.":"¿Te acordás cuáles eran y en qué lugar estaban? Acercate y respondé.";
+  const clock=ph==="mem"?`<div class="clock"><span class="l">El desafío empieza en</span><span class="t" id="cd">${left()}</span></div>`:ph==="ans"?`<div class="clock"><span class="l">Tiempo para responder</span><span class="t" id="cd">${left()}</span></div>`:"";
+  return`<section class="view">
+    <div class="head">
+      <div><span class="eyebrow">Palabras · Ronda ${S.round}</span><h1>${title}</h1><p class="lead">${lead}</p></div><div class="side">${clock}${ph!=="end"?qrBlock():""}</div>
+    </div>
+    <ol class="board ${ch&&!end?"hidden":""}" aria-label="Palabras de la ronda">
+      ${S.words.map((w,i)=>`<li><span class="n">${i+1}</span><span class="w fit" data-max="56" data-min="14">${ch&&!end?"········":esc(w)}</span></li>`).join("")}
+    </ol>
+    ${ph==="ans"?`<div class="callout go"><h2>¡Hora del desafío!</h2><button class="btn primary big" data-go="answer">Responder</button></div>`
+        :`<div class="callout"><p>Cada palabra recordada suma <strong>1 punto</strong> y si está en su lugar suma <strong>1 más</strong> (máximo ${N()*2}). Mientras esperás, probá <strong>Parejas</strong>, <strong>Secuencia</strong> o el <strong>Duelo</strong> de a dos.</p><button class="btn" data-go="duel">Jugar un duelo</button></div>`}
+  </section>`;
+}
+function answer(){
+  if(lastResult) return result();
+  if(phase()==="end") return`<section class="view"><div class="closed"><span class="eyebrow">Palabras · Ronda ${S.round}</span><h2>Se terminó el tiempo para responder</h2><p class="lead">Esperá la próxima ronda y volvé a intentarlo.</p><div class="actions"><button class="btn primary" data-go="board">Ir al pizarrón</button></div></div></section>`;
+  if(!isChallenge()) return`<section class="view"><div class="closed"><span class="eyebrow">Palabras · Ronda ${S.round}</span><h2>Todavía no es la hora del desafío</h2><p class="lead">Las respuestas se abren a las <strong>${hhmm(S.challengeAt)}</strong>. Mientras tanto, mirá bien el pizarrón.</p><div class="actions"><button class="btn primary" data-go="board">Ir al pizarrón</button></div></div></section>`;
+  return`<section class="view"><div><span class="eyebrow">Palabras · Ronda ${S.round}</span><h1>¿Qué palabras eran?</h1></div>
+  <form id="f" autocomplete="off">
+    <div class="field"><label for="name">Tu nombre</label><input type="text" id="name" maxlength="28" placeholder="Ej: Martina" required></div>
+    <div class="field"><label>Escribí cada palabra en el lugar donde estaba. Si no te acordás de alguna, dejala vacía.</label>
+      <div class="slots">${Array.from({length:N()},(_,i)=>`<div class="slot"><span class="n">${i+1}</span><input type="text" id="w${i}" aria-label="Palabra ${i+1}" placeholder="Palabra ${i+1}"></div>`).join("")}</div></div>
+    <div class="actions"><button class="btn lime big" type="submit">Ver mi puntaje</button><span class="note">No importan tildes ni mayúsculas.</span></div>
+  </form></section>`;
+}
+function result(){
+  const r=lastResult,d=r.score.detail;
+  const labels={ok:"✓ Palabra y lugar",half:"Palabra sí, lugar no",miss:"No coincide"};
+  const q=r.score.points/(N()*2);const msg=q>=.85?"¡Memoria brillante!":q>=.55?"¡Muy bien!":q>=.25?"¡Buen intento!":"¡Gracias por jugar!";
+  return`<section class="view">
+    <div><span class="eyebrow">${esc(r.name)} · Palabras · Ronda ${S.round}</span><h1>${msg}</h1></div>
+    <div class="score"><span class="big">${r.score.points}</span><span class="of">de ${N()*2} puntos</span></div>
+    <div class="legend"><span>${r.score.rec} palabras recordadas</span><span>${r.score.pos} en su lugar</span></div>
+    <ol class="cmp">${S.words.map((w,i)=>`<li class="${d[i]}"><span class="row">${i+1} · ${labels[d[i]]}</span><span class="ans fit" data-max="22" data-min="13">${esc(r.ans[i]||"—")}</span><span class="real">Era: ${esc(w)}</span></li>`).join("")}</ol>
+    <p class="aurora-msg">Recordar una lista unos minutos ya cuesta. Para una persona con Alzheimer, lo difícil es recordar la pastilla de las 8 o dónde quedaron las llaves. <strong>Aurora es un asistente de voz que recuerda esas cosas por ella</strong> y acompaña a quien la cuida.</p>
+    <div class="actions"><button class="btn primary big" id="next">Siguiente jugador</button><button class="btn" data-go="rank">Ver ranking</button></div>
+  </section>`;
+}
+
+/* ---------- Parejas ---------- */
+let P={phase:"name"};
+function pairsCols(n){const c=n*2;return c<=16?4:c<=20?5:6}
+function pairsView(){
+  const n=S.pairsN;
+  if(P.phase==="name") return`<section class="view">
+    <div class="head"><div><span class="eyebrow">Parejas</span><h1>Mirá las figuras, después encontrá los pares</h1>
+    <p class="lead">Vas a ver las ${n*2} cartas durante <strong>${S.preview} segundos</strong>. Después se dan vuelta y tenés que dar vuelta de a dos hasta encontrar cada pareja. Gana quien lo logra en menos intentos.</p></div></div>
+    <form id="pf" class="entry" autocomplete="off"><div class="field"><label for="pname">Tu nombre</label><input type="text" id="pname" maxlength="28" placeholder="Ej: Joaquín" required></div><button class="btn lime big" type="submit">Empezar</button></form>
+  </section>`;
+  if(P.phase==="done"){
+    const pos=sortPairs(S.pairs).findIndex(e=>e.at===P.at)+1;
+    const msg=P.attempts<=n+1?"¡Memoria fotográfica!":P.attempts<=n*1.6?"¡Muy bien!":"¡Lo lograste!";
+    return`<section class="view"><div><span class="eyebrow">${esc(P.name)} · Parejas</span><h1>${msg}</h1></div>
+    <div class="score"><span class="big">${P.attempts}</span><span class="of">intentos para ${n} pares</span></div>
+    <div class="legend"><span>${P.secs} segundos</span><span>Puesto ${pos} en el ranking</span></div>
+    <p class="aurora-msg">Asociar una cara con un nombre o un objeto con su lugar es de lo que más cuesta con el Alzheimer. <strong>Aurora acompaña con recordatorios por voz y fotos de la familia</strong>, para que el día a día sea más fácil.</p>
+    <div class="actions"><button class="btn primary big" id="pagain">Siguiente jugador</button><button class="btn" id="torankP">Ver ranking</button></div></section>`;
+  }
+  return`<section class="view">
+    <div class="head"><div><span class="eyebrow">Parejas · ${esc(P.name)}</span><h1 id="ptitle">${P.phase==="preview"?"Memorizá dónde está cada figura":"Encontrá los pares"}</h1></div>
+    <div class="stats">${P.phase==="preview"?`<div class="stat"><b id="pcd">${P.left}</b><span>segundos</span></div>`:`<div class="stat"><b id="patt">${P.attempts}</b><span>intentos</span></div><div class="stat"><b id="pfound">${P.found}/${n}</b><span>pares</span></div>`}</div></div>
+    <div class="memo" style="--cols:${pairsCols(n)}" id="memo">${P.deck.map((s,i)=>`<button class="card${P.phase==="preview"||P.open.includes(i)||P.done.has(i)?" up":""}${P.done.has(i)?" done":""}" data-i="${i}" aria-label="${P.phase==="preview"||P.open.includes(i)||P.done.has(i)?SHAPES[s][0]:"Carta "+(i+1)}"><span class="in"><span class="back"></span><span class="face">${svg(s)}</span></span></button>`).join("")}</div>
+  </section>`;
+}
+function startPairs(name){
+  const n=S.pairsN, ids=shuffle(SHAPES.map((_,i)=>i)).slice(0,n);
+  P={phase:"preview",name,deck:shuffle([...ids,...ids]),open:[],done:new Set(),attempts:0,found:0,left:S.preview,lock:true,t0:0,timers:[]};
+  render();
+  const tick=setInterval(()=>{P.left--;const el=$("#pcd");if(el)el.textContent=P.left;if(P.left<=0){clearInterval(tick);P.phase="play";P.lock=false;P.t0=Date.now();render()}},1000);
+  P.timers.push(()=>clearInterval(tick));
+}
+function flip(i){
+  if(P.phase!=="play"||P.lock||P.done.has(i)||P.open.includes(i))return;
+  P.open.push(i);setCard(i,true);
+  if(P.open.length<2)return;
+  P.attempts++;$("#patt").textContent=P.attempts;
+  const [a,b]=P.open;
+  if(P.deck[a]===P.deck[b]){
+    P.done.add(a);P.done.add(b);P.open=[];P.found++;$("#pfound").textContent=P.found+"/"+S.pairsN;
+    [a,b].forEach(k=>app.querySelector(`.card[data-i="${k}"]`)?.classList.add("done"));
+    if(P.found===S.pairsN){P.secs=Math.round((Date.now()-P.t0)/1000);P.at=Date.now();
+      S.pairs.push({name:P.name,pairs:S.pairsN,attempts:P.attempts,secs:P.secs,at:P.at});save();
+      const t=setTimeout(()=>{P.phase="done";render()},900);P.timers.push(()=>clearTimeout(t))}
+  }else{
+    P.lock=true;const t=setTimeout(()=>{setCard(a,false);setCard(b,false);P.open=[];P.lock=false},950);P.timers.push(()=>clearTimeout(t));
+  }
+}
+function setCard(i,up){const c=app.querySelector(`.card[data-i="${i}"]`);if(!c)return;c.classList.toggle("up",up);c.setAttribute("aria-label",up?SHAPES[P.deck[i]][0]:"Carta "+(i+1))}
+const sortPairs=a=>[...a].sort((x,y)=>(x.attempts/x.pairs)-(y.attempts/y.pairs)||y.pairs-x.pairs||x.secs-y.secs);
+
+/* ---------- Secuencia ---------- */
+let Q={phase:"name"}, actx=null;
+const TONES=[329.6,392,440,523.3];
+function beep(i,ms){if(!S.sound)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=i<0?150:TONES[i];g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.2,actx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+ms/1000);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+ms/1000+.05)}catch(e){}}
+function simonView(){
+  if(Q.phase==="name") return`<section class="view">
+    <div class="head"><div><span class="eyebrow">Secuencia</span><h1>Repetí la secuencia de luces</h1>
+    <p class="lead">Como el anillo de luz de Aurora Home: se van a encender colores en un orden. Tocalos en el mismo orden. Cada vez que acertás, la secuencia suma un color más.</p></div></div>
+    <form id="sf" class="entry" autocomplete="off"><div class="field"><label for="sname">Tu nombre</label><input type="text" id="sname" maxlength="28" placeholder="Ej: Sofía" required></div><button class="btn lime big" type="submit">Empezar</button></form>
+  </section>`;
+  if(Q.phase==="done"){
+    const pos=sortSimon(S.simon).findIndex(e=>e.at===Q.at)+1, lv=Q.level;
+    const msg=lv>=10?"¡Memoria de acero!":lv>=6?"¡Muy bien!":lv>=3?"¡Buen intento!":"¡Gracias por jugar!";
+    return`<section class="view"><div><span class="eyebrow">${esc(Q.name)} · Secuencia</span><h1>${msg}</h1></div>
+    <div class="score"><span class="big">${lv}</span><span class="of">${lv===1?"color recordado":"colores recordados seguidos"}</span></div>
+    <div class="legend"><span>Puesto ${pos} en el ranking</span></div>
+    <p class="aurora-msg">La memoria de corto plazo suele ser de lo primero que se afecta con el Alzheimer. <strong>Aurora guía las rutinas paso a paso por voz</strong>, con luces que indican cuándo escucha y cuándo hay un recordatorio.</p>
+    <div class="actions"><button class="btn primary big" id="sagain">Siguiente jugador</button><button class="btn" id="torankS">Ver ranking</button></div></section>`;
+  }
+  return`<section class="view"><div class="head"><div><span class="eyebrow">Secuencia · ${esc(Q.name)}</span><h1>Repetí la secuencia</h1></div></div>
+    <div class="simonwrap"><p class="sstatus" id="sst" aria-live="polite">Mirá con atención…</p>
+    <div class="simon lock" id="simon">${["Violeta","Lima","Rosa","Celeste"].map((c,i)=>`<button class="pad" data-p="${i}" aria-label="${c}"></button>`).join("")}<div class="hub"><b id="slv">${Q.seq.length}</b><span>colores</span></div></div></div>
+  </section>`;
+}
+function qTimer(fn,ms){const t=setTimeout(fn,ms);Q.timers.push(()=>clearTimeout(t))}
+function lit(i,ms){const p=app.querySelector(`.pad[data-p="${i}"]`);if(!p)return;p.classList.add("lit");beep(i,ms);qTimer(()=>p.classList.remove("lit"),ms)}
+function startSimon(name){Q={phase:"play",name,seq:[],idx:0,lock:true,timers:[]};render();qTimer(nextSimon,700)}
+function nextSimon(){Q.seq.push(Math.floor(Math.random()*4));Q.idx=0;Q.lock=true;$("#slv").textContent=Q.seq.length;$("#simon").classList.add("lock");$("#sst").textContent="Mirá con atención…";
+  const base=S.speed==="rapida"?420:620, on=Math.max(260,base-Q.seq.length*12), off=Math.round(on*.4);
+  Q.seq.forEach((c,k)=>qTimer(()=>lit(c,on),k*(on+off)));
+  qTimer(()=>{Q.lock=false;$("#simon").classList.remove("lock");$("#sst").textContent="¡Tu turno!"},Q.seq.length*(on+off));
+}
+function press(i){
+  if(Q.phase!=="play"||Q.lock)return;
+  if(i===Q.seq[Q.idx]){lit(i,220);Q.idx++;if(Q.idx===Q.seq.length){Q.lock=true;$("#sst").textContent="¡Bien!";qTimer(nextSimon,850)}}
+  else{Q.lock=true;beep(-1,500);$("#sst").textContent="¡Uy! Era otro color";const p=app.querySelector(`.pad[data-p="${Q.seq[Q.idx]}"]`);p?.classList.add("lit");
+    Q.level=Q.seq.length-1;Q.at=Date.now();S.simon.push({name:Q.name,level:Q.level,at:Q.at});save();qTimer(()=>{Q.phase="done";render()},1400)}
+}
+const sortSimon=a=>[...a].sort((x,y)=>y.level-x.level||x.at-y.at);
+function stopGames(){[P,Q,D].forEach(g=>(g.timers||[]).forEach(f=>f()));if(P.phase!=="done")P={phase:"name"};if(Q.phase!=="done")Q={phase:"name"};if(D.phase!=="done")D={phase:"name"};P.timers=[];Q.timers=[];D.timers=[]}
+
+/* ---------- Duelo ---------- */
+let D={phase:"name"};
+function duelView(){
+  const n=S.duelN;
+  if(D.phase==="name") return`<section class="view">
+    <div class="head"><div><span class="eyebrow">Duelo · para 2 jugadores</span><h1>Memotest cara a cara</h1>
+    <p class="lead">${S.duelPreview?`Miran las cartas juntos durante <strong>${S.duelPreview} segundos</strong>. Después, por`:"Por"} turnos, cada uno da vuelta dos cartas. Si encontrás un par, sumás un punto y seguís jugando. Si no, le toca al otro. Gana quien junte más pares.</p></div></div>
+    <form id="df" autocomplete="off" class="entry duo">
+      <div class="field"><label for="dn1"><span class="pdot d1"></span>Jugador 1</label><input type="text" id="dn1" class="p1in" maxlength="20" placeholder="Ej: Lucía" required></div>
+      <span class="vs" aria-hidden="true">vs</span>
+      <div class="field"><label for="dn2"><span class="pdot d2"></span>Jugador 2</label><input type="text" id="dn2" class="p2in" maxlength="20" placeholder="Ej: Tomás" required></div>
+      <button class="btn lime big" type="submit">Empezar duelo</button>
+    </form></section>`;
+  if(D.phase==="done"){
+    const [a,b]=D.score, w=a===b?-1:a>b?0:1;
+    return`<section class="view"><div><span class="eyebrow">Duelo · ${n} pares</span><h1>${w<0?"¡Empate!":"¡Ganó "+esc(D.names[w])+"!"}</h1></div>
+    <div class="duelbar">${[0,1].map(k=>`<div class="pl p${k+1}${w===k?" on":""}"><span class="pn">${esc(D.names[k])}</span><b>${D.score[k]}</b><span class="note">${D.score[k]===1?"par":"pares"}</span></div>`).join("")}</div>
+    <p class="aurora-msg">Jugar y conversar con otros es parte de cuidar la memoria. <strong>Aurora también acompaña a la familia</strong>: el cuidador ve cómo está su ser querido y recibe avisos desde la app.</p>
+    <div class="actions"><button class="btn primary big" id="drematch">Revancha</button><button class="btn" id="dnew">Nuevos jugadores</button><button class="btn" id="torankD">Ver ranking</button></div></section>`;
+  }
+  const up=i=>D.phase==="preview"||D.open.includes(i)||D.owner.has(i);
+  return`<section class="view">
+    <div class="duelbar">${[0,1].map(k=>`<div class="pl p${k+1}${D.phase==="play"&&D.turn===k?" on":""}" id="pl${k}"><span class="pn">${esc(D.names[k])}</span><b id="ds${k}">${D.score[k]}</b><span class="turn">Le toca</span></div>`).join("")}</div>
+    <p class="sstatus" id="dst" aria-live="polite">${D.phase==="preview"?`Memoricen las cartas · <span id="dcd">${D.left}</span>`:"Turno de "+esc(D.names[D.turn])}</p>
+    <div class="memo" style="--cols:${pairsCols(n)}">${D.deck.map((s,i)=>`<button class="card${up(i)?" up":""}${D.owner.has(i)?" done o"+D.owner.get(i):""}" data-d="${i}" aria-label="${up(i)?SHAPES[s][0]:"Carta "+(i+1)}"><span class="in"><span class="back"></span><span class="face">${svg(s)}</span></span></button>`).join("")}</div>
+  </section>`;
+}
+function dTimer(fn,ms){const t=setTimeout(fn,ms);D.timers.push(()=>clearTimeout(t))}
+function startDuel(names){
+  const n=S.duelN, ids=shuffle(SHAPES.map((_,i)=>i)).slice(0,n);
+  D={phase:S.duelPreview?"preview":"play",names,turn:Math.random()<.5?0:1,score:[0,0],deck:shuffle([...ids,...ids]),open:[],owner:new Map(),lock:!!S.duelPreview,left:S.duelPreview,timers:[]};
+  render();
+  if(S.duelPreview){const tick=setInterval(()=>{D.left--;const el=$("#dcd");if(el)el.textContent=D.left;if(D.left<=0){clearInterval(tick);D.phase="play";D.lock=false;render()}},1000);D.timers.push(()=>clearInterval(tick))}
+}
+function dSet(i,up){const c=app.querySelector(`.card[data-d="${i}"]`);if(!c)return;c.classList.toggle("up",up);c.setAttribute("aria-label",up?SHAPES[D.deck[i]][0]:"Carta "+(i+1))}
+function dTurnUI(){[0,1].forEach(k=>$("#pl"+k)?.classList.toggle("on",D.turn===k));const st=$("#dst");if(st)st.textContent="Turno de "+D.names[D.turn]}
+function dflip(i){
+  if(D.phase!=="play"||D.lock||D.owner.has(i)||D.open.includes(i))return;
+  D.open.push(i);dSet(i,true);if(D.open.length<2)return;
+  const [a,b]=D.open;
+  if(D.deck[a]===D.deck[b]){
+    D.owner.set(a,D.turn);D.owner.set(b,D.turn);D.open=[];D.score[D.turn]++;$("#ds"+D.turn).textContent=D.score[D.turn];
+    [a,b].forEach(k=>app.querySelector(`.card[data-d="${k}"]`)?.classList.add("done","o"+D.turn));
+    $("#dst").textContent="¡Par para "+D.names[D.turn]+"! Sigue jugando";
+    if(D.owner.size===D.deck.length){D.lock=true;D.at=Date.now();S.duels.push({a:D.names[0],b:D.names[1],sa:D.score[0],sb:D.score[1],pairs:S.duelN,at:D.at});save();dTimer(()=>{D.phase="done";render()},1000)}
+  }else{D.lock=true;dTimer(()=>{dSet(a,false);dSet(b,false);D.open=[];D.turn=1-D.turn;D.lock=false;dTurnUI()},1000)}
+}
+function duelWins(){const m=new Map();S.duels.forEach(d=>{[[d.a,d.sa>d.sb],[d.b,d.sb>d.sa]].forEach(([nm,won])=>{const k=norm(nm)||nm;const e=m.get(k)||{name:nm,wins:0,games:0};e.games++;if(won)e.wins++;m.set(k,e)})});
+  return[...m.values()].sort((x,y)=>y.wins-x.wins||x.games-y.games)}
+
+/* ---------- Ranking ---------- */
+function rows(list,fmt){
+  if(!list.length) return`<p class="empty">Todavía no hay resultados.</p>`;
+  return`<ol class="rank">${list.slice(0,10).map((e,i)=>`<li><span class="pos">${i+1}</span><span class="name">${esc(e.name)}</span><span class="pts">${fmt(e)}</span></li>`).join("")}</ol>`;
+}
+const sortE=a=>[...a].sort((x,y)=>y.points-x.points||x.at-y.at);
+function rank(){
+  const tab=(k,l)=>`<button class="btn" data-tab="${k}" aria-pressed="${rankTab===k}">${l}</button>`;
+  let body="";
+  if(rankTab==="words"){const f=e=>`${e.points} <small>/ ${e.max||14} pts</small>`;
+    body=`<div class="cols"><section><h2>Ronda ${S.round}</h2>${rows(sortE(S.entries.filter(e=>e.round===S.round)),f)}</section><section><h2>Toda la expo</h2>${rows(sortE(S.entries),f)}</section></div>`}
+  else if(rankTab==="pairs") body=`<section class="cols"><section><h2>Menos intentos por par</h2>${rows(sortPairs(S.pairs),e=>`${e.attempts} <small>intentos · ${e.pairs} pares · ${e.secs} s</small>`)}</section></section>`;
+  else if(rankTab==="duels"){const recent=[...S.duels].sort((x,y)=>y.at-x.at).slice(0,10);
+    body=`<div class="cols"><section><h2>Más victorias</h2>${rows(duelWins(),e=>`${e.wins} <small>${e.wins===1?"victoria":"victorias"} · ${e.games} ${e.games===1?"duelo":"duelos"}</small>`)}</section>
+    <section><h2>Últimos duelos</h2>${recent.length?`<ol class="rank">${recent.map(d=>`<li class="match"><span class="name">${esc(d.a)}</span><span class="pts">${d.sa} – ${d.sb}</span><span class="name r">${esc(d.b)}</span></li>`).join("")}</ol>`:`<p class="empty">Todavía no hay duelos.</p>`}</section></div>`}
+  else body=`<section class="cols"><section><h2>Secuencia más larga</h2>${rows(sortSimon(S.simon),e=>`${e.level} <small>colores</small>`)}</section></section>`;
+  return`<section class="view"><div><span class="eyebrow">Ranking</span><h1>Las mejores memorias del stand</h1></div>
+  <div class="tabs">${tab("words","Palabras")}${tab("pairs","Parejas")}${tab("simon","Secuencia")}${tab("duels","Duelo")}</div>${body}</section>`;
+}
+
+/* ---------- Staff ---------- */
+function staff(){
+  const ch=isChallenge(), t=new Date(S.challengeAt), tv=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+  const opt=(v,cur,l)=>`<option value="${v}"${String(v)===String(cur)?" selected":""}>${l}</option>`;
+  return`<section class="view"><div><span class="eyebrow">Solo para el equipo</span><h1>Configuración</h1></div>
+  <div class="panel"><h2>Apariencia</h2><div class="actions">
+    <button class="btn" data-theme-set="dark" aria-pressed="${S.theme==="dark"}">Modo oscuro</button>
+    <button class="btn" data-theme-set="light" aria-pressed="${S.theme==="light"}">Modo claro</button>
+    <button class="btn" id="fs">Pantalla completa</button></div>
+    <div class="actions"><span class="lbl">Zoom</span><button class="btn" id="zm" aria-label="Achicar">−</button><button class="btn" id="z0">${Math.round(S.zoom*100)}%</button><button class="btn" id="zp" aria-label="Agrandar">+</button><span class="note">También con Ctrl + rueda del mouse, o Ctrl + / Ctrl −.</span></div>
+    <p class="note">El modo oscuro es el de la marca; el claro se lee mejor si el stand tiene mucha luz.</p></div>
+  <div class="panel"><div class="actions" style="justify-content:space-between"><h2>Palabras · Ronda ${S.round}</h2>
+    <span class="status ${ch?"":"off"}"><span class="dot"></span>${({mem:"Palabras en pantalla hasta las "+hhmm(S.challengeAt),ans:"Respuestas abiertas hasta las "+hhmm(endAt()),end:"Ronda terminada"})[phase()]}</span></div>
+    <div class="grid2">${S.words.map((w,i)=>`<div class="field"><label for="e${i}">Palabra ${i+1}</label><input type="text" id="e${i}" value="${esc(w)}"></div>`).join("")}
+      <div class="field"><label for="cant">Cantidad de palabras</label><input type="number" id="cant" min="1" max="${MAXW}" value="${N()}"></div>
+      </div>
+    <div class="timing"><h3>Tiempos de la ronda</h3>
+      <div class="grid2">
+        <div class="field"><label for="rmin">Palabras en pantalla (minutos)</label><input type="number" id="rmin" min="0.5" max="600" step="0.5" value="${S.roundMin}"></div>
+        <div class="field"><label for="amin">Palabras ocultas, para responder (minutos)</label><input type="number" id="amin" min="0.5" max="600" step="0.5" value="${S.answerMin}"></div>
+        <div class="field"><span class="lbl">Duración total de la ronda</span><span class="total" id="tot">${fmtMin(S.roundMin+S.answerMin)}</span></div></div>
+      <div class="tl" aria-hidden="true"><span class="seg a" style="flex:${S.roundMin}">En pantalla</span><span class="seg b" style="flex:${S.answerMin}">Ocultas</span><span class="mark" id="tlm" style="left:${progress()}%"></span></div>
+      <p class="note">Ronda ${S.round}: empezó a las ${hhmm(S.roundStart)}, se ocultan a las ${hhmm(S.challengeAt)} y a las ${hhmm(endAt())} arranca sola la ronda ${S.round+1}. Los cambios de tiempo se aplican a la ronda actual.</p></div>
+    <div class="actions"><button class="btn primary" id="saveW">Guardar cambios</button><button class="btn" id="shuffle">Sortear palabras nuevas</button>
+      <button class="btn" id="toggle">${ch?"Volver a mostrar (reinicia el tiempo)":"Ocultar palabras ahora"}</button></div>
+    <div class="actions"><button class="btn lime" id="newR">Empezar ronda ${S.round+1}</button><span class="note">Corta la ronda actual y arranca otra ahora, con ${N()} palabras nuevas.</span></div>
+  </div>
+  <div class="panel"><h2>QR para celulares</h2>
+    <div class="field"><label for="purl">Dirección pública del juego</label><input type="text" id="purl" placeholder="https://tu-usuario.github.io/aurora-juegos/" value="${esc(S.publicUrl)}"></div>
+    ${playerUrl()?`<div class="qrprev">${qrBlock()}<div class="field"><span class="lbl">El QR de la ronda ${S.round} abre:</span><a class="link" href="${esc(playerUrl())}" target="_blank" rel="noopener">${esc(playerUrl())}</a><span class="note">El QR cambia solo con cada ronda. Si cambiás los tiempos o empezás una ronda a mano, los celulares que ya lo escanearon quedan desfasados: que lo vuelvan a escanear.</span></div></div>`
+      :`<p class="note">Para que aparezca el QR al lado de las palabras, el juego tiene que estar publicado en una dirección web que los celulares puedan abrir (por ejemplo, GitHub Pages). Pegá esa dirección acá.</p>`}
+  </div>
+  <div class="panel"><h2>Parejas</h2><div class="grid2">
+    <div class="field"><label for="pn">Cantidad de pares</label><select id="pn">${[3,4,5,6,8,10,12].map(v=>opt(v,S.pairsN,v+" pares ("+v*2+" cartas)")).join("")}</select></div>
+    <div class="field"><label for="pv">Segundos para memorizar</label><input type="number" id="pv" min="1" max="60" value="${S.preview}"></div></div></div>
+  <div class="panel"><h2>Secuencia</h2><div class="grid2">
+    <div class="field"><label for="sp">Velocidad</label><select id="sp">${opt("normal",S.speed,"Normal")}${opt("rapida",S.speed,"Rápida")}</select></div>
+    <label class="check"><input type="checkbox" id="snd"${S.sound?" checked":""}> Sonido al encender cada color</label></div></div>
+  <div class="panel"><h2>Duelo</h2><div class="grid2">
+    <div class="field"><label for="dn">Cantidad de pares</label><input type="number" id="dn" min="3" max="12" value="${S.duelN}"></div>
+    <div class="field"><label for="dp">Segundos para memorizar (0 = sin vista previa)</label><input type="number" id="dp" min="0" max="30" value="${S.duelPreview}"></div></div></div>
+  <div class="panel"><h2>Borrar rankings</h2><p class="note">Tocá dos veces para confirmar.</p><div class="actions">
+    ${[["entries","Palabras"],["pairs","Parejas"],["simon","Secuencia"],["duels","Duelo"]].map(([k,l])=>`<button class="btn danger" data-clear="${k}">${confirmClear===k?"Confirmar: borrar "+S[k].length:"Borrar "+l+" ("+S[k].length+")"}</button>`).join("")}</div></div>
+  <div class="panel"><h2>Reiniciar todo</h2><p class="note">Borra los resultados de todos los juegos y vuelve a la ronda 1. Se mantiene la configuración. Los datos se guardan solo en este navegador.</p>
+    <div class="actions">${confirmReset?`<span>¿Seguro? Se borran ${S.entries.length+S.pairs.length+S.simon.length+S.duels.length} resultados.</span><button class="btn danger" id="resetY">Sí, borrar todo</button><button class="btn" id="resetN">Cancelar</button>`:`<button class="btn danger" id="reset">Reiniciar juego</button>`}</div></div>
+  </section>`;
+}
+
+function bind(){
+  app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+  const on=(id,fn,ev="onclick")=>{const el=$("#"+id);if(el)el[ev]=fn};
+  const f=$("#f");
+  if(f){$("#name").focus();f.onsubmit=e=>{e.preventDefault();const name=$("#name").value.trim();if(!name){$("#name").focus();return}
+    const ans=Array.from({length:N()},(_,i)=>$("#w"+i).value.trim());const sc=score(ans);
+    S.entries.push({name,round:S.round,points:sc.points,max:N()*2,ans,at:Date.now()});save();lastResult={name,ans,score:sc};render();window.scrollTo(0,0)}}
+  on("next",()=>{lastResult=null;render()});
+  // Parejas
+  on("pf",e=>{e.preventDefault();const n=$("#pname").value.trim();if(n)startPairs(n)},"onsubmit");
+  $("#pname")?.focus();
+  app.querySelectorAll(".card[data-i]").forEach(c=>c.onclick=()=>flip(+c.dataset.i));
+  on("pagain",()=>{P={phase:"name"};render()});
+  on("torankP",()=>{rankTab="pairs";P={phase:"name"};go("rank")});
+  // Secuencia
+  on("sf",e=>{e.preventDefault();const n=$("#sname").value.trim();if(n){beep(0,1);startSimon(n)}},"onsubmit");
+  $("#sname")?.focus();
+  app.querySelectorAll(".pad").forEach(p=>p.onclick=()=>press(+p.dataset.p));
+  on("sagain",()=>{Q={phase:"name"};render()});
+  on("torankS",()=>{rankTab="simon";Q={phase:"name"};go("rank")});
+  // Duelo
+  on("df",e=>{e.preventDefault();const a=$("#dn1").value.trim(),b=$("#dn2").value.trim();if(a&&b)startDuel([a,b])},"onsubmit");
+  $("#dn1")?.focus();
+  app.querySelectorAll(".card[data-d]").forEach(c=>c.onclick=()=>dflip(+c.dataset.d));
+  on("drematch",()=>startDuel([D.names[1],D.names[0]]));
+  on("dnew",()=>{D={phase:"name"};render()});
+  on("torankD",()=>{rankTab="duels";D={phase:"name"};go("rank")});
+  // Ranking
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{rankTab=b.dataset.tab;render()});
+  // Staff
+  app.querySelectorAll("[data-theme-set]").forEach(b=>b.onclick=()=>{S.theme=b.dataset.themeSet;save();applyTheme();render()});
+  const cant=$("#cant");if(cant)cant.onchange=()=>{let n=Math.round(Number(cant.value));if(!n||n<1)n=1;if(n>MAXW)n=MAXW;
+    const cur=Array.from({length:N()},(_,i)=>$("#e"+i).value.trim()||S.words[i]);
+    S.words=n<=cur.length?cur.slice(0,n):cur.concat(pick(n-cur.length,cur));save();toast(n+(n===1?" palabra":" palabras")+" en esta ronda");render()};
+  on("saveW",()=>{const w=Array.from({length:N()},(_,i)=>$("#e"+i).value.trim());if(w.some(x=>!x)){toast("Completá todas las palabras");return}
+    S.words=w;save();toast("Cambios guardados");render()});
+  on("shuffle",()=>{S.words=pick(N(),S.words);save();toast("Palabras nuevas sorteadas");render()});
+  on("toggle",()=>{if(isChallenge()){S.roundStart=Date.now();S.challengeAt=S.roundStart+S.roundMin*60000}else S.challengeAt=Date.now();save();render()});
+  on("newR",()=>{newRound();toast("Ronda "+S.round+" en marcha");go("board")});
+  const num=(id,k,min,max)=>on(id,()=>{let v=Math.round(+$("#"+id).value);if(isNaN(v))v=CFG[k];S[k]=Math.min(max,Math.max(min,v));save();toast("Guardado");render()},"onchange");
+  const mins=(id,k)=>{const el=$("#"+id);if(!el)return;
+    el.oninput=()=>{const a=+$("#rmin").value||0,b=+$("#amin").value||0;$("#tot").textContent=fmtMin(a+b)};
+    el.onchange=()=>{let v=Math.round((+el.value)*2)/2;if(!(v>=0.5))v=0.5;if(v>600)v=600;S[k]=v;S.challengeAt=S.roundStart+S.roundMin*60000;save();toast("Tiempos guardados · ronda de "+fmtMin(S.roundMin+S.answerMin));render()}};
+  mins("rmin","roundMin");mins("amin","answerMin");num("dn","duelN",3,12);num("dp","duelPreview",0,30);
+  app.querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>{const k=b.dataset.clear;if(confirmClear!==k){confirmClear=k;render();return}
+    S[k]=[];confirmClear=null;save();toast("Ranking borrado");render()});
+  on("pn",()=>{S.pairsN=+$("#pn").value;save();toast("Parejas: "+S.pairsN+" pares")},"onchange");
+  on("pv",()=>{let v=Math.round(+$("#pv").value);S.preview=Math.min(60,Math.max(1,v||5));save();toast("Vista previa: "+S.preview+" s")},"onchange");
+  on("sp",()=>{S.speed=$("#sp").value;save();toast("Velocidad guardada")},"onchange");
+  on("snd",()=>{S.sound=$("#snd").checked;save()},"onchange");
+  on("purl",()=>{S.publicUrl=$("#purl").value.trim();save();toast(S.publicUrl?"Dirección guardada":"Dirección borrada");render()},"onchange");
+  on("zm",()=>setZoom(S.zoom-.1));on("zp",()=>setZoom(S.zoom+.1));on("z0",()=>setZoom(1));
+  on("fs",()=>{document.documentElement.requestFullscreen?.().catch(()=>toast("Pantalla completa no disponible acá"))});
+  on("reset",()=>{confirmReset=true;render()});
+  on("resetN",()=>{confirmReset=false;render()});
+  on("resetY",()=>{S=fresh(S);applyZoom();P={phase:"name"};Q={phase:"name"};D={phase:"name"};lastResult=null;save();applyTheme();confirmReset=false;toast("Todo reiniciado");go("board")});
+}
+
+/* ---------- Timer en el celular ---------- */
+function startTimer(){
+  document.body.classList.add("timer");document.documentElement.setAttribute("data-aurora","dark");
+  const q=new URLSearchParams(location.hash.slice(1));
+  const r0=+q.get("r")||1,s0=+q.get("s"),m=+q.get("m")||45,a=+q.get("a")||15;
+  if(!s0){app.innerHTML=`<section class="tview"><h1>Este QR no es válido</h1><p class="lead">Volvé a escanear el código del stand de Aurora.</p></section>`;return}
+  const per=(m+a)*60000;let armed=false,fired={},lastKey="";
+  app.innerHTML=`<section class="tview" aria-live="polite">
+    <span class="eyebrow" id="tr">Palabras</span>
+    <h1 id="tt"></h1>
+    <div class="tbig" id="tc">--:--</div>
+    <div class="tbar"><span id="tf"></span></div>
+    <p class="lead" id="tl"></p>
+    <div class="tactions"><button class="btn lime big" id="arm">Activar aviso</button><button class="btn" id="ics">Agregar al calendario</button></div>
+    <p class="note" id="tn">Dejá esta pantalla abierta con el volumen activado. Te avisamos con sonido${"vibrate" in navigator?", vibración":""} y notificación cuando quede 1 minuto.</p>
+  </section>`;
+  const cur=()=>{const t=Date.now();let k=Math.max(0,Math.floor((t-s0)/per));const rs=s0+k*per,ch=rs+m*60000,en=ch+a*60000;return{k,round:r0+k,rs,ch,en,t}};
+  function alertNow(title,body,strong){
+    document.body.classList.add("alert");setTimeout(()=>document.body.classList.remove("alert"),strong?12000:4000);
+    try{navigator.vibrate?.(strong?[500,200,500,200,900]:[300])}catch(e){}
+    if(S.sound!==false){[0,450,900].slice(0,strong?3:1).forEach(d=>setTimeout(()=>beep(2,350),d))}
+    try{if(window.Notification&&Notification.permission==="granted")new Notification(title,{body,tag:"aurora-"+title})}catch(e){}
+  }
+  function tick(){
+    const c=cur(),key=c.round;$("#tr").textContent="Palabras · Ronda "+c.round;
+    let left,title,lead,frac;
+    if(c.t<c.ch){left=c.ch-c.t;frac=(c.t-c.rs)/(c.ch-c.rs);
+      const last=left<=60000;title=last?"¡Queda 1 minuto! Volvé al stand":"Las palabras se ocultan en";
+      lead=last?"Mirá las palabras por última vez: en un minuto se esconden y empieza el desafío.":c.k>0?"Empezó una ronda nueva con otras palabras. Pasá por el stand a verlas.":"Memorizá las palabras del pizarrón y su orden. Te avisamos cuando quede 1 minuto.";
+      document.body.classList.toggle("last",last);
+      if(last&&!fired[key+"m"]){fired[key+"m"]=1;alertNow("Queda 1 minuto","Volvé al stand de Aurora: las palabras se ocultan en un minuto.",true)}
+    }else{left=c.en-c.t;frac=(c.t-c.ch)/(c.en-c.ch);document.body.classList.remove("last");
+      title="¡Hora del desafío! Tenés para responder";lead="Andá al stand y decí qué palabras eran y en qué orden.";
+      if(!fired[key+"a"]){fired[key+"a"]=1;if(c.t-c.ch<5000)alertNow("Empezó el desafío","Andá al stand de Aurora a responder.",false)}}
+    $("#tt").textContent=title;$("#tc").textContent=mmss(left);$("#tl").textContent=lead;$("#tf").style.width=(Math.min(1,Math.max(0,frac))*100).toFixed(1)+"%";
+    document.title=mmss(left)+" · Aurora";
+  }
+  $("#arm").onclick=async()=>{beep(0,120);try{navigator.vibrate?.(80)}catch(e){}
+    try{if(window.Notification&&Notification.permission==="default")await Notification.requestPermission()}catch(e){}
+    try{await navigator.wakeLock?.request("screen")}catch(e){}
+    armed=true;$("#arm").textContent="Aviso activado ✓";$("#arm").disabled=true};
+  $("#ics").onclick=()=>{const c=cur(),ch=c.t<c.ch?c.ch:c.ch+per;const f=d=>new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+    const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Aurora//Juego//ES","BEGIN:VEVENT","UID:aurora-"+ch+"@juego","DTSTAMP:"+f(Date.now()),"DTSTART:"+f(ch),"DTEND:"+f(ch+a*60000),"SUMMARY:Desafío de palabras · Aurora","DESCRIPTION:Volvé al stand de Aurora a decir las palabras en orden.","BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Queda 1 minuto: volvé al stand de Aurora","TRIGGER:-PT1M","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+    const l=document.createElement("a");l.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);l.download="desafio-aurora.ics";document.body.appendChild(l);l.click();l.remove()};
+  tick();setInterval(tick,1000);
+}
+
+let wasPh=phase();
+if(!IS_TIMER)setInterval(()=>{let ph=phase();
+  if(ph==="end"){newRound();ph=phase();toast("Empezó la ronda "+S.round)}
+  if(ph!==wasPh){wasPh=ph;if(view==="board"||(view==="answer"&&!lastResult)||view==="staff")render();return}
+  const cd=$("#cd");if(cd)cd.textContent=left();const m=$("#tlm");if(m)m.style.left=progress()+"%"},1000);
+try{navigator.wakeLock?.request("screen").catch(()=>{})}catch(e){}
+applyZoom();
+if(IS_TIMER)startTimer();else render();
+</script>
+</body>
+</html>
